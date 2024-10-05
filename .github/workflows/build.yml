@@ -12,23 +12,19 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-22.04 ]
-    env:
-      GCC_V: 14
 
     steps:
     - name: Checkout Source Code
       uses: actions/checkout@v3
 
-    - name: Install Dependencies (Linux)
+    - name: Install Dependencies
       if: contains(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update
-        sudo apt-get install -y gcc-${GCC_V} gfortran-${GCC_V} make
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_V} 100 \
-          --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${GCC_V}
+        sudo apt-get install -y gcc gfortran make
         sudo apt-get install -y libstrophe0 libstrophe-dev
 
-    - name: Build (Linux)
+    - name: Build
       if: contains(matrix.os, 'ubuntu')
       run: |
         which gfortran
