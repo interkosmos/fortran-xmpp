@@ -241,7 +241,6 @@ module xmpp
     public :: xmpp_sha1_to_digest
     public :: xmpp_sha1_to_string
     public :: xmpp_sha1_to_string_
-    ! public :: xmpp_sha1_to_string_alloc
     public :: xmpp_sha1_update
     public :: xmpp_sha1_update_
     public :: xmpp_shutdown
@@ -307,7 +306,6 @@ module xmpp
     public :: xmpp_stanza_set_to_
     public :: xmpp_stanza_set_type
     public :: xmpp_stanza_set_type_
-    ! public :: xmpp_stanza_to_text
     public :: xmpp_stop
     public :: xmpp_timed_handler_add
     public :: xmpp_timed_handler_delete
