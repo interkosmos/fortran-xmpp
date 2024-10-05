@@ -32,4 +32,3 @@ jobs:
         which gcc
         gcc --version
         make
-        make examples
