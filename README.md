@@ -1,5 +1,7 @@
 # fortran-xmpp
 
+[![Build](https://github.com/interkosmos/fortran-xmpp/actions/workflows/build.yml/badge.svg)](https://github.com/interkosmos/fortran-xmpp/actions/workflows/build.yml)
+
 A collection of Fortran 2018 interface bindings to the lightweight XMPP client
 library [libstrophe](http://strophe.im/libstrophe/).
 
