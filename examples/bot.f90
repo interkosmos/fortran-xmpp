@@ -46,8 +46,8 @@ program main
     call xmpp_initialize()
 
     ! Set log level and create context.
-    log  = xmpp_get_default_logger(XMPP_LEVEL_DEBUG)
-    ctx  = xmpp_ctx_new(c_null_ptr, log)
+    log = xmpp_get_default_logger(XMPP_LEVEL_DEBUG)
+    ctx = xmpp_ctx_new(c_null_ptr, log)
 
     do
         ! Reset reconnection flag.
@@ -57,7 +57,7 @@ program main
         conn = xmpp_conn_new(ctx)
         stat = xmpp_conn_set_flags(conn, flags)
 
-        ! Ask for a password if key is protected.
+        ! Set key password to user password if key is protected.
         call xmpp_conn_set_password_callback(conn, password_handler, c_loc(user))
 
         ! Try password retrieval only once.
@@ -71,7 +71,7 @@ program main
             call xmpp_conn_set_sockopt_callback(conn, xmpp_sockopt_cb_keepalive)
         end if
 
-        ! Set Stream-Mangement state if available.
+        ! Set Stream-Management state if available.
         if (c_associated(sm_state)) then
             stat = xmpp_conn_set_sm_state(conn, sm_state)
             sm_state = c_null_ptr
