@@ -62,6 +62,12 @@ Build the examples by running:
 $ make examples
 ```
 
+## Further Reading
+
+* [libstrophe website](http://strophe.im/libstrophe/)
+* [libstrophe GitHub repository](https://github.com/strophe/libstrophe)
+* [libstrophe API](https://strophe.im/libstrophe/doc/0.13.0/topics.html)
+
 ## Licence
 
 ISC
