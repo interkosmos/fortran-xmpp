@@ -186,6 +186,7 @@ module xmpp
     public :: xmpp_disconnect
     public :: xmpp_error_new
     public :: xmpp_error_new_
+    public :: xmpp_free
     public :: xmpp_free_sm_state
     public :: xmpp_free_sm_state_
     public :: xmpp_get_default_logger
@@ -244,6 +245,7 @@ module xmpp
     public :: xmpp_sha1_update
     public :: xmpp_sha1_update_
     public :: xmpp_shutdown
+    public :: xmpp_sockopt_cb_keepalive
     public :: xmpp_stanza_add_child
     public :: xmpp_stanza_add_child_ex
     public :: xmpp_stanza_clone
@@ -379,7 +381,7 @@ module xmpp
         function xmpp_password_callback(pw, pw_max, conn, user_data) bind(c)
             import :: c_char, c_int, c_ptr, c_size_t
             implicit none
-            character(kind=c_char), intent(in)        :: pw
+            type(c_ptr),            intent(in), value :: pw
             integer(kind=c_size_t), intent(in), value :: pw_max
             type(c_ptr),            intent(in), value :: conn
             type(c_ptr),            intent(in), value :: user_data
@@ -785,6 +787,14 @@ module xmpp
             type(c_ptr)                               :: xmpp_error_new_
         end function xmpp_error_new_
 
+        ! void xmpp_free(const xmpp_ctx_t *ctx, void *p)
+        subroutine xmpp_free(ctx, ptr) bind(c, name='xmpp_free')
+            import :: c_ptr
+            implicit none
+            type(c_ptr), intent(in), value :: ctx
+            type(c_ptr), intent(in), value :: ptr
+        end subroutine xmpp_free
+
         ! void xmpp_free_sm_state(xmpp_sm_state_t *sm_state)
         subroutine xmpp_free_sm_state_(sm_state) bind(c, name='xmpp_free_sm_state')
             import :: c_ptr
@@ -820,14 +830,14 @@ module xmpp
 
         ! void xmpp_handler_add(xmpp_conn_t *conn, xmpp_handler handler, const char *ns, const char *name, const char *type, void *userdata)
         subroutine xmpp_handler_add_(conn, handler, ns, name, type, user_data) bind(c, name='xmpp_handler_add')
-            import :: c_char, c_ptr, xmpp_handler
+            import :: c_ptr, xmpp_handler
             implicit none
-            type(c_ptr),            intent(in), value :: conn
-            procedure(xmpp_handler)                   :: handler
-            character(kind=c_char), intent(in)        :: ns
-            character(kind=c_char), intent(in)        :: name
-            character(kind=c_char), intent(in)        :: type
-            type(c_ptr),            intent(in), value :: user_data
+            type(c_ptr), intent(in), value :: conn
+            procedure(xmpp_handler)        :: handler
+            type(c_ptr), intent(in), value :: ns
+            type(c_ptr), intent(in), value :: name
+            type(c_ptr), intent(in), value :: type
+            type(c_ptr), intent(in), value :: user_data
         end subroutine xmpp_handler_add_
 
         ! void xmpp_handler_delete(xmpp_conn_t *conn, xmpp_handler handler)
@@ -1116,6 +1126,15 @@ module xmpp
         ! void xmpp_shutdown(void)
         subroutine xmpp_shutdown() bind(c, name='xmpp_shutdown')
         end subroutine xmpp_shutdown
+
+        ! int xmpp_sockopt_cb_keepalive(xmpp_conn_t *conn, void *sock)
+        function xmpp_sockopt_cb_keepalive(conn, sock) bind(c, name='xmpp_sockopt_cb_keepalive')
+            import :: c_int, c_ptr
+            implicit none
+            type(c_ptr), intent(in), value :: conn
+            type(c_ptr), intent(in), value :: sock
+            integer(kind=c_int)            :: xmpp_sockopt_cb_keepalive
+        end function xmpp_sockopt_cb_keepalive
 
         ! int xmpp_stanza_add_child(xmpp_stanza_t *stanza, xmpp_stanza_t *child)
         function xmpp_stanza_add_child(stanza, child) bind(c, name='xmpp_stanza_add_child')
@@ -1558,6 +1577,7 @@ contains
 
         call xmpp_base64_decode_bin_(ctx, base64, len, ptr, out_len)
         call c_f_str_ptr(ptr, out, out_len)
+        call xmpp_free(ctx, ptr)
     end subroutine xmpp_base64_decode_bin
 
     function xmpp_base64_decode_str(ctx, base64, len)
@@ -1570,6 +1590,7 @@ contains
 
         ptr = xmpp_base64_decode_str_(ctx, base64, len)
         call c_f_str_ptr(ptr, xmpp_base64_decode_str)
+        call xmpp_free(ctx, ptr)
     end function xmpp_base64_decode_str
 
     function xmpp_base64_encode(ctx, data, len)
@@ -1582,6 +1603,7 @@ contains
 
         ptr = xmpp_base64_encode_(ctx, data, len)
         call c_f_str_ptr(ptr, xmpp_base64_encode)
+        call xmpp_free(ctx, ptr)
     end function xmpp_base64_encode
 
     function xmpp_conn_cert_xmppaddr(conn, n)
@@ -1772,6 +1794,8 @@ contains
     end function xmpp_error_new
 
     subroutine xmpp_handler_add(conn, handler, ns, name, type, user_data)
+        !! Wrapper routine that passed null-terminated strings or `NULL` to
+        !! interface.
         type(c_ptr),      intent(in) :: conn
         procedure(xmpp_handler)      :: handler
         character(len=*), intent(in) :: ns
@@ -1779,7 +1803,32 @@ contains
         character(len=*), intent(in) :: type
         type(c_ptr),      intent(in) :: user_data
 
-        call xmpp_handler_add_(conn, handler, ns // c_null_char, name // c_null_char, type // c_null_char, user_data)
+        character(len=len(ns)   + 1), target :: ns_str
+        character(len=len(name) + 1), target :: name_str
+        character(len=len(type) + 1), target :: type_str
+
+        type(c_ptr) :: ns_ptr, name_ptr, type_ptr
+
+        ns_ptr   = c_null_ptr
+        name_ptr = c_null_ptr
+        type_ptr = c_null_ptr
+
+        if (len_trim(ns) > 0) then
+            ns_str = ns // c_null_char
+            ns_ptr = c_loc(ns_str)
+        end if
+
+        if (len_trim(name) > 0) then
+            name_str = name // c_null_char
+            name_ptr = c_loc(name_str)
+        end if
+
+        if (len_trim(type) > 0) then
+            type_str = type // c_null_char
+            type_ptr = c_loc(type_str)
+        end if
+
+        call xmpp_handler_add_(conn, handler, ns_ptr, name_ptr, type_ptr, user_data)
     end subroutine xmpp_handler_add
 
     subroutine xmpp_id_handler_add(conn, handler, id, user_data)
@@ -1817,6 +1866,7 @@ contains
 
         ptr = xmpp_jid_bare_(ctx, jid // c_null_char)
         call c_f_str_ptr(ptr, xmpp_jid_bare)
+        call xmpp_free(ctx, ptr)
     end function xmpp_jid_bare
 
     function xmpp_jid_domain(ctx, jid)
@@ -1828,6 +1878,7 @@ contains
 
         ptr = xmpp_jid_domain_(ctx, jid // c_null_char)
         call c_f_str_ptr(ptr, xmpp_jid_domain)
+        call xmpp_free(ctx, ptr)
     end function xmpp_jid_domain
 
     function xmpp_jid_new(ctx, node, domain, resource)
@@ -1841,6 +1892,7 @@ contains
 
         ptr = xmpp_jid_new_(ctx, node // c_null_char, domain // c_null_char, resource // c_null_char)
         call c_f_str_ptr(ptr, xmpp_jid_new)
+        call xmpp_free(ctx, ptr)
     end function xmpp_jid_new
 
     function xmpp_jid_node(ctx, jid)
@@ -1852,6 +1904,7 @@ contains
 
         ptr = xmpp_jid_node_(ctx, jid // c_null_char)
         call c_f_str_ptr(ptr, xmpp_jid_node)
+        call xmpp_free(ctx, ptr)
     end function xmpp_jid_node
 
     function xmpp_jid_resource(ctx, jid)
@@ -1863,9 +1916,13 @@ contains
 
         ptr = xmpp_jid_resource_(ctx, jid // c_null_char)
         call c_f_str_ptr(ptr, xmpp_jid_resource)
+        call xmpp_free(ctx, ptr)
     end function xmpp_jid_resource
 
-    function xmpp_message_get_body(msg)
+    function xmpp_message_get_body(ctx, msg)
+        !! In contrast to the libstrophe API, this wrapper functions requires
+        !! the context to be passed to free the C string.
+        type(c_ptr), intent(in)       :: ctx
         type(c_ptr), intent(in)       :: msg
         character(len=:), allocatable :: xmpp_message_get_body
 
@@ -1873,6 +1930,7 @@ contains
 
         ptr = xmpp_message_get_body_(msg)
         call c_f_str_ptr(ptr, xmpp_message_get_body)
+        call xmpp_free(ctx, ptr)
     end function xmpp_message_get_body
 
     function xmpp_message_new(ctx, type, to, id)
@@ -2072,6 +2130,7 @@ contains
 
         ptr = xmpp_stanza_get_text_(stanza)
         call c_f_str_ptr(ptr, xmpp_stanza_get_text)
+        call xmpp_free(xmpp_stanza_get_context(stanza), ptr)
     end function xmpp_stanza_get_text
 
     function xmpp_stanza_get_text_ptr(stanza)
@@ -2247,5 +2306,6 @@ contains
 
         ptr = xmpp_uuid_gen_(ctx)
         call c_f_str_ptr(ptr, xmpp_uuid_gen)
+        call xmpp_free(ctx, ptr)
     end function xmpp_uuid_gen
 end module xmpp
