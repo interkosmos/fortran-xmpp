@@ -234,6 +234,7 @@ module xmpp
     public :: xmpp_send_raw_string
     public :: xmpp_send_raw_string_
     public :: xmpp_sha1
+    public :: xmpp_sha1_
     public :: xmpp_sha1_digest
     public :: xmpp_sha1_final
     public :: xmpp_sha1_free
@@ -1056,14 +1057,14 @@ module xmpp
         end subroutine xmpp_send_raw_string_
 
         ! char *xmpp_sha1(xmpp_ctx_t *ctx, const unsigned char *data, size_t len)
-        function xmpp_sha1(ctx, data, len) bind(c, name='xmpp_sha1')
+        function xmpp_sha1_(ctx, data, data_len) bind(c, name='xmpp_sha1')
             import :: c_char, c_ptr, c_size_t
             implicit none
             type(c_ptr),            intent(in), value :: ctx
             character(kind=c_char), intent(in)        :: data
-            integer(kind=c_size_t), intent(in), value :: len
-            type(c_ptr)                               :: xmpp_sha1
-        end function xmpp_sha1
+            integer(kind=c_size_t), intent(in), value :: data_len
+            type(c_ptr)                               :: xmpp_sha1_
+        end function xmpp_sha1_
 
         ! void xmpp_sha1_digest(const unsigned char *data, size_t len, unsigned char *digest)
         subroutine xmpp_sha1_digest(data, len, digest) bind(c, name='xmpp_sha1_digest')
@@ -1687,6 +1688,7 @@ contains
 
         ptr = xmpp_conn_send_queue_drop_element_(conn, which)
         call c_f_str_ptr(ptr, xmpp_conn_send_queue_drop_element)
+        call xmpp_free(xmpp_conn_get_context(conn), ptr)
     end function xmpp_conn_send_queue_drop_element
 
     subroutine xmpp_conn_set_cafile(conn, path)
@@ -1973,6 +1975,26 @@ contains
 
         call xmpp_send_raw_string_(conn, str // c_null_char)
     end subroutine xmpp_send_raw_string
+
+    function xmpp_sha1(ctx, data, data_len)
+        type(c_ptr),            intent(in)           :: ctx
+        character(len=*),       intent(in)           :: data
+        integer(kind=c_size_t), intent(in), optional :: data_len
+        character(len=:), allocatable                :: xmpp_sha1
+
+        integer(kind=c_size_t) :: n
+        type(c_ptr)            :: ptr
+
+        if (present(data_len)) then
+            n = data_len
+        else
+            n = len(data, kind=c_size_t)
+        end if
+
+        ptr = xmpp_sha1_(ctx, data, n)
+        call c_f_str_ptr(ptr, xmpp_sha1)
+        call xmpp_free(ctx, ptr)
+    end function xmpp_sha1
 
     subroutine xmpp_sha1_free(sha1)
         type(c_ptr), intent(inout) :: sha1
