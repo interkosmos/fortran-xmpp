@@ -20,13 +20,13 @@ LIBDIR  = $(PREFIX)/lib
 SRC     = src/xmpp.f90 src/xmpp_macro.c src/xmpp_util.f90
 OBJ     = xmpp.o xmpp_macro.o xmpp_util.o
 MOD     = xmpp.mod xmpp_util.mod
-TARGET  = ./libfortran-xmpp.a
+TARGET  = libfortran-xmpp.a
 
 .PHONY: all clean debug examples install
 
 all: $(TARGET)
 
-examples: basic roster
+examples: basic bot roster uuid
 
 $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) $(LDFLAGS) -c src/xmpp_macro.c
@@ -40,8 +40,14 @@ debug: $(SRC)
 basic: $(TARGET) examples/basic.f90
 	$(FC) $(FFLAGS) $(LDFLAGS) -o basic examples/basic.f90 $(TARGET) $(LDLIBS)
 
+bot: $(TARGET) examples/bot.f90
+	$(FC) $(FFLAGS) $(LDFLAGS) -o bot examples/bot.f90 $(TARGET) $(LDLIBS)
+
 roster: $(TARGET) examples/roster.f90
 	$(FC) $(FFLAGS) $(LDFLAGS) -o roster examples/roster.f90 $(TARGET) $(LDLIBS)
+
+uuid: $(TARGET) examples/uuid.f90
+	$(FC) $(FFLAGS) $(LDFLAGS) -o uuid examples/uuid.f90 $(TARGET) $(LDLIBS)
 
 install: $(TARGET)
 	@echo "--- Installing library to $(LIBDIR)/ ..."
@@ -56,4 +62,6 @@ clean:
 	if [ `ls -1 *.o 2>/dev/null | wc -l` -gt 0 ]; then rm *.o; fi
 	if [ -e $(TARGET) ]; then rm $(TARGET); fi
 	if [ -e basic ]; then rm basic; fi
+	if [ -e bot ]; then rm bot; fi
 	if [ -e roster ]; then rm roster; fi
+	if [ -e uuid ]; then rm uuid; fi

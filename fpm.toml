@@ -22,6 +22,16 @@ source-dir = "examples"
 main = "basic.f90"
 
 [[example]]
+name = "bot"
+source-dir = "examples"
+main = "bot.f90"
+
+[[example]]
 name = "roster"
 source-dir = "examples"
 main = "roster.f90"
+
+[[example]]
+name = "uuid"
+source-dir = "examples"
+main = "uuid.f90"

@@ -52,7 +52,15 @@ fortran-xmpp = { git = "https://github.com/interkosmos/fortran-xmpp.git" }
 Some example programs can be found in directory `examples/`:
 
 * **basic** – connects to an XMPP server.
+* **bot** – implements a simple bot.
 * **roster** – prints contact list.
+* **uuid** – outputs UUID.
+
+Build the examples by running:
+
+```
+$ make examples
+```
 
 ## Licence
 
