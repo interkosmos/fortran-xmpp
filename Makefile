@@ -5,10 +5,10 @@ FC      = gfortran
 CC      = gcc
 AR      = ar
 MAKE    = make
-PREFIX  = /usr
+PREFIX  = /usr/local
 
-DEBUG   = -std=f2018 -g -O0 -Wall -fmax-errors=1
-RELEASE = -std=f2018 -O2
+DEBUG   = -g -O0 -Wall -fmax-errors=1 -std=f2018
+RELEASE = -O2
 
 FFLAGS  = $(RELEASE)
 CFLAGS  = -O2
@@ -17,7 +17,7 @@ LDLIBS  = -lstrophe -lexpat -lssl -lcrypto -lz
 ARFLAGS = rcs
 INCDIR  = $(PREFIX)/include/libfortran-xmpp
 LIBDIR  = $(PREFIX)/lib
-SRC     = src/xmpp.f90 src/xmpp_macro.c src/xmpp_util.f90
+SRC     = src/xmpp.F90 src/xmpp_macro.c src/xmpp_util.f90
 OBJ     = xmpp.o xmpp_macro.o xmpp_util.o
 MOD     = xmpp.mod xmpp_util.mod
 TARGET  = libfortran-xmpp.a
@@ -31,7 +31,7 @@ examples: basic bot roster uuid
 $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) $(LDFLAGS) -c src/xmpp_macro.c
 	$(FC) $(FFLAGS) $(LDFLAGS) -c src/xmpp_util.f90
-	$(FC) $(FFLAGS) $(LDFLAGS) -c src/xmpp.f90
+	$(FC) $(FFLAGS) $(LDFLAGS) -c src/xmpp.F90
 	$(AR) $(ARFLAGS) $(TARGET) $(OBJ)
 
 debug: $(SRC)

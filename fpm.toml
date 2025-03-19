@@ -4,7 +4,7 @@ license = "ISC"
 author = "Philipp Engel"
 maintainer = "@interkosmos"
 copyright = "Copyright (c) 2024, Philipp Engel"
-description = "Fortran 2018 interface bindings to libstrophe"
+description = "Fortran 2018 ISO C binding interfaces to libstrophe"
 keywords = [ "xmpp", "jabber", "libstrophe" ]
 
 [build]

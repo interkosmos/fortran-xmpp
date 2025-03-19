@@ -1,4 +1,4 @@
-! xmpp.f90
+! xmpp.F90
 !
 ! Auto-generated Fortran 2018 interface bindings to libstrophe.
 !
@@ -10,11 +10,21 @@ module xmpp
     implicit none (type, external)
     private
 
-    ! C types
+#if defined (__flang__)
+
+    public :: c_unsigned
+    public :: c_unsigned_char
+    public :: c_unsigned_long
+    public :: c_unsigned_short
+
+#else
+
+    integer, parameter, public :: c_unsigned       = c_int
     integer, parameter, public :: c_unsigned_char  = c_signed_char
-    integer, parameter, public :: c_unsigned_int   = c_int
     integer, parameter, public :: c_unsigned_long  = c_long
     integer, parameter, public :: c_unsigned_short = c_short
+
+#endif
 
     ! namespace defines
     character(len=*), parameter, public :: XMPP_NS_CLIENT              = 'jabber:client'
@@ -442,19 +452,19 @@ module xmpp
 
         ! char *xmpp_conn_cert_xmppaddr(xmpp_conn_t *conn, unsigned int n)
         function xmpp_conn_cert_xmppaddr_(conn, n) bind(c, name='xmpp_conn_cert_xmppaddr')
-            import :: c_ptr, c_unsigned_int
+            import :: c_ptr, c_unsigned
             implicit none
-            type(c_ptr),                  intent(in), value :: conn
-            integer(kind=c_unsigned_int), intent(in), value :: n
-            type(c_ptr)                                     :: xmpp_conn_cert_xmppaddr_
+            type(c_ptr),              intent(in), value :: conn
+            integer(kind=c_unsigned), intent(in), value :: n
+            type(c_ptr)                                 :: xmpp_conn_cert_xmppaddr_
         end function xmpp_conn_cert_xmppaddr_
 
         ! unsigned int xmpp_conn_cert_xmppaddr_num(xmpp_conn_t *conn)
         function xmpp_conn_cert_xmppaddr_num(conn) bind(c, name='xmpp_conn_cert_xmppaddr_num')
-            import :: c_ptr, c_unsigned_int
+            import :: c_ptr, c_unsigned
             implicit none
             type(c_ptr), intent(in), value :: conn
-            integer(kind=c_unsigned_int)   :: xmpp_conn_cert_xmppaddr_num
+            integer(kind=c_unsigned)       :: xmpp_conn_cert_xmppaddr_num
         end function xmpp_conn_cert_xmppaddr_num
 
         ! xmpp_conn_t *xmpp_conn_clone(xmpp_conn_t *conn)
@@ -680,10 +690,10 @@ module xmpp
 
         ! void xmpp_conn_set_password_retries(xmpp_conn_t *conn, unsigned int retries)
         subroutine xmpp_conn_set_password_retries(conn, retries) bind(c, name='xmpp_conn_set_password_retries')
-            import :: c_ptr, c_unsigned_int
+            import :: c_ptr, c_unsigned
             implicit none
-            type(c_ptr),                  intent(in), value :: conn
-            integer(kind=c_unsigned_int), intent(in), value :: retries
+            type(c_ptr),              intent(in), value :: conn
+            integer(kind=c_unsigned), intent(in), value :: retries
         end subroutine xmpp_conn_set_password_retries
 
         ! int xmpp_conn_set_sm_state(xmpp_conn_t *conn, xmpp_sm_state_t *sm_state)
@@ -1608,9 +1618,9 @@ contains
     end function xmpp_base64_encode
 
     function xmpp_conn_cert_xmppaddr(conn, n)
-        type(c_ptr),                  intent(in) :: conn
-        integer(kind=c_unsigned_int), intent(in) :: n
-        character(len=:), allocatable            :: xmpp_conn_cert_xmppaddr
+        type(c_ptr),              intent(in) :: conn
+        integer(kind=c_unsigned), intent(in) :: n
+        character(len=:), allocatable        :: xmpp_conn_cert_xmppaddr
 
         type(c_ptr) :: ptr
 
@@ -1737,7 +1747,7 @@ contains
 
         xmpp_connect_client = xmpp_connect_client_(conn, &
                                                    alt_domain // c_null_char, &
-                                                   int(alt_port, kind=c_unsigned_short), &
+                                                   int(alt_port, c_unsigned_short), &
                                                    callback, &
                                                    user_data)
     end function xmpp_connect_client
@@ -1752,7 +1762,7 @@ contains
 
         xmpp_connect_component = xmpp_connect_component_(conn, &
                                                          server // c_null_char, &
-                                                         int(port, kind=c_unsigned_short), &
+                                                         int(port, c_unsigned_short), &
                                                          callback, &
                                                          user_data)
     end function xmpp_connect_component
@@ -1767,7 +1777,7 @@ contains
 
         xmpp_connect_raw = xmpp_connect_raw_(conn, &
                                              alt_domain // c_null_char, &
-                                             int(alt_port, kind=c_unsigned_short), &
+                                             int(alt_port, c_unsigned_short), &
                                              callback, &
                                              user_data)
     end function xmpp_connect_raw
