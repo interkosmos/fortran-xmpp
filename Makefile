@@ -29,9 +29,9 @@ all: $(TARGET)
 examples: basic bot roster uuid
 
 $(TARGET): $(SRC)
-	$(CC) $(CFLAGS) $(LDFLAGS) -c src/xmpp_macro.c
-	$(FC) $(FFLAGS) $(LDFLAGS) -c src/xmpp_util.f90
-	$(FC) $(FFLAGS) $(LDFLAGS) -c src/xmpp.F90
+	$(CC) $(CFLAGS) -c src/xmpp_macro.c
+	$(FC) $(FFLAGS) -c src/xmpp_util.f90
+	$(FC) $(FFLAGS) -c src/xmpp.F90
 	$(AR) $(ARFLAGS) $(TARGET) $(OBJ)
 
 debug: $(SRC)
